@@ -81,7 +81,7 @@ You do not need Maven installed globally; use the included wrapper.
 
 ## 🧪 Testing
 
-A Postman collection (`Grid07_Postman_Collection.json`) is included in the root directory. Import this file into Postman to test the endpoints.
+A Postman collection (`Postman_Collection.json`) is included in the root directory. Import this file into Postman to test the endpoints.
 
 ### Available Endpoints
 
