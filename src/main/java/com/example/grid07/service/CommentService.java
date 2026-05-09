@@ -7,6 +7,7 @@ import com.example.grid07.exception.RateLimitException; // We will create this n
 import com.example.grid07.repository.BotRepository;
 import com.example.grid07.repository.CommentRepository;
 import com.example.grid07.repository.PostRepository;
+import com.example.grid07.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,9 @@ public class CommentService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public Comment createComment(Long postId, CreateCommentRequest request) {
         // 1. Fetch the Post
         Post post = postRepository.findById(postId)
@@ -53,20 +57,25 @@ public class CommentService {
         }
 
         // 4. Identify if the incoming commenter is a Bot
+        boolean isUser = userRepository.existsById(request.getAuthorId());
         boolean isBot = botRepository.existsById(request.getAuthorId());
+
+        if (!isUser && !isBot) {
+            throw new IllegalArgumentException("Author not found: Must be a valid User or Bot");
+        }
 
         if (isBot) {
             // 5. Check Horizontal Cap Guardrail
             if (!guardrailService.checkHorizontalCap(postId)) {
-                throw new RateLimitException("429 Too Many Requests: Horizontal cap exceeded");
+                throw new RateLimitException("429 Too Many Requests");
             }
 
             // 6. Check Cooldown Guardrail (ONLY if interacting with a Human)
-            boolean isTargetBot = botRepository.existsById(targetAuthorId);
+            boolean isTargetHuman = userRepository.existsById(targetAuthorId);
 
-            if (!isTargetBot) { // Target is a Human
+            if (isTargetHuman) {
                 if (!guardrailService.checkBotHumanCooldown(request.getAuthorId(), targetAuthorId)) {
-                    throw new RateLimitException("429 Too Many Requests: Bot is on cooldown");
+                    throw new RateLimitException("Bot is on cooldown");
                 }
             }
         }

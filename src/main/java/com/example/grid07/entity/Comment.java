@@ -1,6 +1,7 @@
 package com.example.grid07.entity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -25,5 +26,7 @@ public class Comment {
 
     private Integer depthLevel;
 
+    @Builder.Default
+    @CreationTimestamp
     private LocalDateTime createdAt = LocalDateTime.now();
 }
