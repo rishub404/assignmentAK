@@ -5,23 +5,22 @@ import com.example.grid07.entity.Post;
 import com.example.grid07.repository.BotRepository;
 import com.example.grid07.repository.PostRepository;
 import com.example.grid07.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PostService {
 
-    private final PostRepository postRepository;
-    private final BotRepository botRepository;
-    private final UserRepository userRepository;
 
-    public PostService(PostRepository postRepository,
-                       BotRepository botRepository, UserRepository userRepository) {
-        this.postRepository = postRepository;
-        this.botRepository = botRepository;
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private PostRepository postRepository;
 
-    // Notice we only need the request DTO here
+    @Autowired
+    private BotRepository botRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     public Post createPost(CreatePostRequest request) {
 
         Long authorId = request.getAuthorId();

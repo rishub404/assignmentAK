@@ -7,24 +7,29 @@ import com.example.grid07.exception.RateLimitException; // We will create this n
 import com.example.grid07.repository.BotRepository;
 import com.example.grid07.repository.CommentRepository;
 import com.example.grid07.repository.PostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CommentService {
 
-    private final CommentRepository commentRepository;
-    private final PostRepository postRepository;
-    private final BotRepository botRepository;
-    private final GuardrailService guardrailService;
+    @Autowired
+    private CommentRepository commentRepository;
 
-    // Constructor Injection
-    public CommentService(CommentRepository commentRepository, PostRepository postRepository,
-                          BotRepository botRepository, GuardrailService guardrailService) {
-        this.commentRepository = commentRepository;
-        this.postRepository = postRepository;
-        this.botRepository = botRepository;
-        this.guardrailService = guardrailService;
-    }
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private BotRepository botRepository;
+
+    @Autowired
+    private GuardrailService guardrailService;
+
+    @Autowired
+    private ViralityService viralityService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public Comment createComment(Long postId, CreateCommentRequest request) {
         // 1. Fetch the Post
@@ -64,6 +69,18 @@ public class CommentService {
                     throw new RateLimitException("429 Too Many Requests: Bot is on cooldown");
                 }
             }
+        }
+
+        // Inside CommentService.java createComment method, right before saving:
+        if (isBot) {
+            viralityService.addPoints(postId, 1);
+
+            // Only notify if target is a human
+            if (!botRepository.existsById(targetAuthorId)) {
+                notificationService.handleBotInteraction(targetAuthorId, request.getAuthorId());
+            }
+        } else {
+            viralityService.addPoints(postId, 50); // Human comment = 50 pts
         }
 
         // 7. Save and Return the Comment
